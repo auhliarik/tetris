@@ -8,39 +8,45 @@ class UnknownMovementDirectionErrror(Exception): pass
 class Shape():
     """Class used to handle individual shapes in a game. See its methods for
     more information."""
+    primary_canvas = None
 
-    def __init__(self, type):
+    def __init__(self, type, i0=-1 , j0=6, canvas=None):
         self._type = type    # One of 'I', 'J', 'L', 'S', 'Z', 'O', 'T'
+        if canvas is None:
+            self._canvas = Shape.primary_canvas
+        else:
+            self._canvas = canvas
 
         # Individual shape types with important information about them
-        # 'squares_coords' are spawning coordinates of shapes
+        # 'squares_coords' are spawning coordinates of shapes, dependent of
+        # (i0, j0) - left lower corner of an 2x4 box, where they spawn.
         if self._type == 'I':
-            squares_coords = [(-1,6), (-1,7), (-1,8), (-1,9)]
-            rotation_center = [-1, 8]
+            squares_coords = [(i0,j0), (i0,j0+1), (i0,j0+2), (i0,j0+3)]
+            rotation_center = [i0, j0+2]
             color = 'cyan'
         elif self._type == 'J':
-            squares_coords = [(-2,6), (-1,6), (-1,7), (-1,8)]
-            rotation_center = [-1, 7]
+            squares_coords = [(i0-1,j0), (i0,j0), (i0,j0+1), (i0,j0+2)]
+            rotation_center = [i0, j0+1]
             color = 'blue'
         elif self._type == 'L':
-            squares_coords = [(-1,6), (-1,7), (-1,8), (-2,8)]
-            rotation_center = [-1, 7]
+            squares_coords = [(i0,j0), (i0,j0+1), (i0,j0+2), (i0-1,j0+2)]
+            rotation_center = [i0, j0+1]
             color = 'orange'
         elif self._type == 'S':
-            squares_coords = [(-1,6), (-1,7), (-2,7), (-2,8)]
-            rotation_center = [-2, 7]
+            squares_coords = [(i0,j0), (i0,j0+1), (i0-1,j0+1), (i0-1,j0+2)]
+            rotation_center = [i0-1, j0+1]
             color = 'green'
         elif self._type == 'Z':
-            squares_coords = [(-2,6), (-2,7), (-1,7), (-1,8)]
-            rotation_center = [-2, 7]
+            squares_coords = [(i0-1,j0), (i0-1,j0+1), (i0,j0+1), (i0,j0+2)]
+            rotation_center = [i0-1, j0+1]
             color = 'red'
         elif self._type == 'O':
-            squares_coords = [(-1,7), (-2,7), (-1,8), (-2,8)]
-            rotation_center = [-2, 7]
+            squares_coords = [(i0,j0+1), (i0-1,j0+1), (i0,j0+2), (i0-1,j0+2)]
+            rotation_center = [i0-1, j0+1]
             color = 'yellow'
         elif self._type == 'T':
-            squares_coords = [(-1,6), (-1,7), (-2,7), (-1,8)]
-            rotation_center = [-1, 7]
+            squares_coords = [(i0,j0), (i0,j0+1), (i0-1,j0+1), (i0,j0+2)]
+            rotation_center = [i0, j0+1]
             color = 'magenta'
         else:
             message = f"Shape type '{self._type}' unknown."
@@ -49,7 +55,7 @@ class Shape():
         self._rotation_center = rotation_center # Needed only until shape locks
         self._squares = set()
         for i, j in squares_coords:
-            self._squares.add(sq.Square(i, j, color))
+            self._squares.add(sq.Square(self._canvas, i, j, color))
 
     def is_at(self, row, column):
         """Returns boolean, whether one of the shape's squares is at postition
@@ -110,14 +116,18 @@ class Shape():
 
         self._rotation_center[0] += row_diff
         self._rotation_center[1] += column_diff
-        sq.Square.canvas.update()
+        self._canvas.update()
 
     def test_and_move(self, where, all_shapes):
         """Combines 'can_move' and 'move' methods - firstly checks if the move
         is possible and if yes the move is performed."""
 
+
         if self.can_move(where, all_shapes):
             self.move(where)
+            return True
+        else:
+            return False
 
     def test_and_rotate(self, all_shapes):
         """Tests, whether rotating a shape is possible and rotates it, if it is.
@@ -176,6 +186,7 @@ class Shape():
 
         for i, square in enumerate(self._squares):
             square.move_to(*new_positions[i])
+        self._canvas.update()
         return True
 
     def can_move_to(self, new_positions, all_shapes):

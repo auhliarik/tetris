@@ -12,9 +12,10 @@ class Square:
                     # two hidden columns with number -1 and -2, where shapes
                     # spawn
     no_columns = 15 # Number of columns for the whole class
-    canvas = None   # Canvas from tkinter module, in which squares are created
 
-    def __init__(self, row, column, color):
+    def __init__(self, canvas, row, column, color):
+        # Canvas, where square should show
+        self.canvas = canvas
         Square.test_row_and_column(row, column)
         self._row = row
         self._column = column
@@ -26,7 +27,7 @@ class Square:
         x1 = x0 + Square.a
         y1 = y0 + Square.a
 
-        self._tag = Square.canvas.create_rectangle(x0, y0, x1, y1, fill=color)
+        self._tag = self.canvas.create_rectangle(x0, y0, x1, y1, fill=color)
 
     def move_to(self, row, column):
         """Safely moves square to another position determined by [row]
@@ -43,11 +44,11 @@ class Square:
         x1 = x0 + Square.a
         y1 = y0 + Square.a
 
-        Square.canvas.coords(self._tag, x0, y0, x1, y1)
+        self.canvas.coords(self._tag, x0, y0, x1, y1)
 
     def delete(self):
         """Deletes square."""
-        Square.canvas.delete(self._tag)
+        self.canvas.delete(self._tag)
 
     def __str__(self):
         return "(" + str(self._row) + "," + str(self._column) + ")"
@@ -61,7 +62,7 @@ class Square:
     @color.setter
     def color(self, color):
         self._color = color
-        Square.canvas.itemconfig(self._tag, fill=color)
+        self.canvas.itemconfig(self._tag, fill=color)
 
     @property
     def row(self):
