@@ -10,7 +10,7 @@ class Shape():
     more information."""
     primary_canvas = None
 
-    def __init__(self, type, i0=-1 , j0=6, canvas=None):
+    def __init__(self, type, i0=-1 , j0=6, canvas=None, empty=False):
         self._type = type    # One of 'I', 'J', 'L', 'S', 'Z', 'O', 'T'
         if canvas is None:
             self._canvas = Shape.primary_canvas
@@ -54,8 +54,9 @@ class Shape():
 
         self._rotation_center = rotation_center # Needed only until shape locks
         self._squares = set()
-        for i, j in squares_coords:
-            self._squares.add(sq.Square(self._canvas, i, j, color))
+        if not empty:
+            for i, j in squares_coords:
+                self._squares.add(sq.Square(self._canvas, i, j, color))
 
     def is_at(self, row, column):
         """Returns boolean, whether one of the shape's squares is at postition
@@ -201,6 +202,12 @@ class Shape():
                     return False
         return True
 
+    def add_square(self, square):
+        self._squares.add(square)
+
+    def remove_square(self, square):
+        self._squares.discard(square)
+
     def delete_square_at(self, row, column):
         """Deletes square of a shape which is at position ([row], [column])."""
 
@@ -210,6 +217,10 @@ class Shape():
                 self._squares.discard(square)
                 break
 
+    def delete(self):
+        for square in self._squares:
+            square.delete()
+
     def __str__(self):
         res = self._type + ":\n"
         for square in self._squares:
@@ -217,6 +228,10 @@ class Shape():
         return res
 
     __repr__ = __str__
+
+    @property
+    def type(self):
+        return self._type
 
     @property
     def squares(self):

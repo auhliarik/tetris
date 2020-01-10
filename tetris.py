@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import font as tkfont
 
 
 import game
@@ -13,7 +14,7 @@ class Program:
         #
         self.toolbar = tk.Frame(self.window,
                                 height=600,
-                                width=300)
+                                width=400)
         self.toolbar.grid(row=0, column=1)
 
 
@@ -25,12 +26,20 @@ class Program:
 
         self.game = game.Game(self.window, self.next_shape_canvas)
 
+        font = tkfont.Font(family='Helvetica', size=20, weight='bold')
+        self.new_game_button = tk.Button(self.toolbar,
+                                         text="New game", font=font,
+                                         command=self.game.new_game)
+        self.new_game_button.grid(row=2)
+
+
         self.pause_image = tk.PhotoImage(file='pause.png')
         self.play_image = tk.PhotoImage(file='play.png')
         self.pause_button = tk.Button(self.toolbar, width=50, height=50,
                                       image=self.pause_image,
                                       command=self.pause_unpause)
         self.pause_button.grid(row=3, padx=20, pady=20)
+
 
         self.game.run()
 
