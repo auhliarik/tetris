@@ -10,6 +10,7 @@ class Game():
     def __init__(self, window, next_shape_canvas):
         # Do not change these constants. Their changing is not possible without
         # a manual change of other parameters - mainly shapes' spawnig position.
+        self.window = window
         self.block_size  = sq.Square.a = 30
         self.no_rows     = sq.Square.num_rows = 20
         self.no_columns  = sq.Square.num_columns = 15
@@ -24,7 +25,7 @@ class Game():
         # Main canvas
         self.canvas_height = self.no_rows*self.block_size
         self.canvas_width = self.no_columns*self.block_size
-        self.canvas = tkinter.Canvas(window,
+        self.canvas = tkinter.Canvas(self.window,
                                      height=self.canvas_height,
                                      width=self.canvas_width,
                                      bg='black')
@@ -70,7 +71,8 @@ class Game():
             shape.delete()
         self.shapes_in_canvas.clear()
 
-        self.time_step_cycle = None
+        # # In case game was paused
+        # self.window.pause_button.config(image=self.play_image)
 
         self.active_shape = shp.Shape(random.choice(self.shape_types))
         self.next_shape_type = random.choice(self.shape_types)
@@ -78,6 +80,7 @@ class Game():
 
         self.shapes_in_canvas = {self.active_shape}
         self.points = 0
+        self.time_step_cycle = None
         time.sleep(0.6)
         self.run()
 
@@ -99,14 +102,14 @@ class Game():
             self.next_shape_type = random.choice(self.shape_types)
             self.display_next_shape(self.next_shape_type)
             # New active shape starts to fall
-            if self.active_shape.can_move('<down>', self.shapes_in_canvas):
+            if not self.active_shape.can_move('<down>', self.shapes_in_canvas):
+                self.pause()
+                print("Game over")
+            else:
                 self.active_shape.move('<down>')
                 self.time_step_cycle = self.canvas.after(self.delay,
                                                          self.time_step)
-                return
-            else:
-                self.pause()
-                print("Game over")
+            return
 
         if self.active_shape.can_move('<down>', self.shapes_in_canvas):
             self.active_shape.move('<down>')
