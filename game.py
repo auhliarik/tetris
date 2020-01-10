@@ -7,10 +7,10 @@ import shape as shp
 
 
 class Game():
-    def __init__(self, window, next_shape_canvas):
+    def __init__(self, program, window, next_shape_canvas):
         # Do not change these constants. Their changing is not possible without
         # a manual change of other parameters - mainly shapes' spawnig position.
-        self.window = window
+        self.program = program
         self.block_size  = sq.Square.a = 30
         self.no_rows     = sq.Square.num_rows = 20
         self.no_columns  = sq.Square.num_columns = 15
@@ -25,7 +25,7 @@ class Game():
         # Main canvas
         self.canvas_height = self.no_rows*self.block_size
         self.canvas_width = self.no_columns*self.block_size
-        self.canvas = tkinter.Canvas(self.window,
+        self.canvas = tkinter.Canvas(window,
                                      height=self.canvas_height,
                                      width=self.canvas_width,
                                      bg='black')
@@ -71,8 +71,8 @@ class Game():
             shape.delete()
         self.shapes_in_canvas.clear()
 
-        # # In case game was paused
-        # self.window.pause_button.config(image=self.play_image)
+        # In case game was paused
+        self.program.pause_button.config(image=self.program.pause_image)
 
         self.active_shape = shp.Shape(random.choice(self.shape_types))
         self.next_shape_type = random.choice(self.shape_types)
@@ -82,6 +82,7 @@ class Game():
         self.points = 0
         self.time_step_cycle = None
         time.sleep(0.6)
+        self.bind_keys()
         self.run()
 
     def bind_keys(self):

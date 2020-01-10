@@ -19,12 +19,11 @@ class Program:
 
 
         self.next_shape_canvas = tk.Canvas(self.toolbar,
-                                           width=5*30,
-                                           height=4*30,
+                                           width=5*30, height=4*30,
                                            bg='black')
         self.next_shape_canvas.grid(row=0, padx=20, pady=20)
 
-        self.game = game.Game(self.window, self.next_shape_canvas)
+        self.game = game.Game(self, self.window, self.next_shape_canvas)
 
         font = tkfont.Font(family='Helvetica', size=20, weight='bold')
         self.new_game_button = tk.Button(self.toolbar,
