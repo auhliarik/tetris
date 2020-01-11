@@ -17,19 +17,25 @@ class Program:
                                 width=400)
         self.toolbar.grid(row=0, column=1)
 
+        # Canvas, where next shape is displayed together with its label
+        font = tkfont.Font(family='Helvetica', size=15, weight='bold')
+        self.next_shape_label = tk.Label(self.toolbar, text="Next shape:",
+                                         font=font)
+        self.next_shape_label.grid(row=0)
 
         self.next_shape_canvas = tk.Canvas(self.toolbar,
                                            width=5*30, height=4*30,
                                            bg='black')
-        self.next_shape_canvas.grid(row=0, padx=20, pady=20)
+        self.next_shape_canvas.grid(row=1, padx=20, pady=0)
 
         self.game = game.Game(self, self.window, self.next_shape_canvas)
+
 
         font = tkfont.Font(family='Helvetica', size=20, weight='bold')
         self.new_game_button = tk.Button(self.toolbar,
                                          text="New game", font=font,
                                          command=self.new_game)
-        self.new_game_button.grid(row=2)
+        self.new_game_button.grid(row=2, pady=20)
 
 
         self.pause_image = tk.PhotoImage(file='pause.png')
