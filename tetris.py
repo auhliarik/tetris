@@ -14,7 +14,7 @@ class Program:
         #
         self.toolbar = tk.Frame(self.window,
                                 height=600,
-                                width=400)
+                                width=500)
         self.toolbar.grid(row=0, column=1)
 
         # Canvas, where next shape is displayed together with its label
@@ -27,15 +27,25 @@ class Program:
                                            bg='black')
         self.next_shape_canvas.grid(row=1, padx=20, pady=0)
 
-
+        # At this point game object can be created
         self.game = game.Game(self, self.window, self.next_shape_canvas)
+
+        font = tkfont.Font(family='Helvetica', size=16, weight='bold')
+        self.points_display = tk.Label(self.toolbar,
+                                       textvariable=self.game.points_text,
+                                       font=font)
+        self.points_display.grid(row=2, padx=20, pady=10)
+        self.lines_display = tk.Label(self.toolbar,
+                                       textvariable=self.game.lines_text,
+                                       font=font)
+        self.lines_display.grid(row=3, padx=20, pady=10)
 
 
         font = tkfont.Font(family='Helvetica', size=20, weight='bold')
         self.new_game_button = tk.Button(self.toolbar,
                                          text="New game", font=font,
                                          command=self.ask_if_sure)
-        self.new_game_button.grid(row=2, pady=20)
+        self.new_game_button.grid(row=4, pady=20)
 
 
         self.pause_image = tk.PhotoImage(file='pause.png')
@@ -43,7 +53,7 @@ class Program:
         self.pause_button = tk.Button(self.toolbar, width=50, height=50,
                                       image=self.pause_image,
                                       command=self.pause_unpause)
-        self.pause_button.grid(row=3, padx=20, pady=20)
+        self.pause_button.grid(row=5, padx=20, pady=20)
 
 
         self.game.run()
@@ -74,6 +84,8 @@ class Program:
 
         self.popup = tk.Toplevel(self.window)
         self.popup.title("Warning")
+        self.popup.grab_set()
+        self.popup.attributes('-topmost', 'true')
 
         text = "Are you sure you want to start again?\n"
         text += "All progress will be lost."
@@ -82,12 +94,14 @@ class Program:
         label.grid(row=0, columnspan=2, padx=20, pady=10)
 
         def f_no():
+            self.popup.grab_release()
             self.popup.destroy()
             self.pause_unpause()
         button_no = tk.Button(self.popup, text="No", font=font,
                               command=f_no)
         button_no.grid(row=1, column=0)
         def f_yes():
+            self.popup.grab_release()
             self.popup.destroy()
             self.new_game()
         button_yes = tk.Button(self.popup, text="Yes", font=font,

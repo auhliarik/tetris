@@ -14,11 +14,17 @@ class Game():
         self.block_size  = sq.Square.a = 30
         self.no_rows     = sq.Square.num_rows = 20
         self.no_columns  = sq.Square.num_columns = 15
-        self.delay = 500     # delay, between two subsequent movements down [ms]
 
-        self.real_gravity = False
+        self.delay = 500     # delay between two subsequent movements down [ms]
         self.paused = False
+
+        self.deleted_lines = 0                   # Raises level
+        self.lines_text = tkinter.StringVar()    # Displayed in lines label
+        self.lines_text.set("Deleted lines: 0")
+        self.level = 1      # Increased by points, affects delay
         self.points = 0
+        self.points_text = tkinter.StringVar()    # Displayed in points label
+        self.points_text.set("Points: 0")
 
         # Canvas, Where next shape to spawn is shown, should be set before run
         self.next_shape_canvas = next_shape_canvas
@@ -76,7 +82,7 @@ class Game():
         self.canvas.update()
 
         self.shapes_in_canvas = {self.active_shape}
-        self.points = 0
+        self.reset_points()
         self.time_step_cycle = None
         time.sleep(0.6)
         self.bind_keys()
@@ -195,10 +201,9 @@ class Game():
             if len(shape.coords) == 0:
                 self.shapes_in_canvas.discard(shape)
 
-        # Adding points
-        self.points += 100*no_deleted_lines
-        if no_deleted_lines != 0:
-            print("Points:", self.points)
+        # Add deleted lines, points, update level, etc.
+        if no_deleted_lines:
+            self.add_points(no_deleted_lines)
 
         # Falling of blocks
         # All shapes try to move down one after another until the situation
@@ -215,3 +220,31 @@ class Game():
                 times_unchanged += 1
             else:
                 times_unchanged = 0
+
+    def add_points(self, no_deleted_lines):
+        """Updates no. of deleted lines, points, level and increases game
+        speed if needed."""
+
+        self.deleted_lines += no_deleted_lines
+        self.lines_text.set(f"Deleted lines: {self.deleted_lines}")
+
+        factor = {1:40, 2:100, 3:300, 4:1200}
+        self.points += factor[no_deleted_lines] * self.level
+        self.points_text.set(f"Points: {self.points}")
+
+        if self.deleted_lines % 10 == 0:
+            self.level += 1
+            self.delay = round(self.delay * 0.8)
+
+    def reset_points(self):
+        """Resets points, no. of deleted lines, level and game speed. Used when
+        game is reset."""
+        
+        self.deleted_lines = 0
+        self.lines_text.set(f"Deleted lines: {self.deleted_lines}")
+
+        self.points = 0
+        self.points_text.set(f"Points: {self.points}")
+
+        self.level = 0
+        self.delay = 500
