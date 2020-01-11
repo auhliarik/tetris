@@ -71,9 +71,6 @@ class Game():
             shape.delete()
         self.shapes_in_canvas.clear()
 
-        # In case game was paused
-        self.program.pause_button.config(image=self.program.pause_image)
-
         self.active_shape = shp.Shape(random.choice(self.shape_types))
         self.next_shape_type = random.choice(self.shape_types)
         self.canvas.update()

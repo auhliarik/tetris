@@ -28,7 +28,7 @@ class Program:
         font = tkfont.Font(family='Helvetica', size=20, weight='bold')
         self.new_game_button = tk.Button(self.toolbar,
                                          text="New game", font=font,
-                                         command=self.game.new_game)
+                                         command=self.new_game)
         self.new_game_button.grid(row=2)
 
 
@@ -54,6 +54,11 @@ class Program:
             self.game.run()
             self.game.bind_keys()
             self.pause_button.config(image=self.pause_image)
+
+    def new_game(self):
+        self.pause_button.config(image=self.pause_image)
+        self.game.new_game()
+
 
 
 
