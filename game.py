@@ -17,6 +17,7 @@ class Game():
 
         self.delay = 500     # delay between two subsequent movements down [ms]
         self.paused = False
+        self.is_game_over = False
 
         self.deleted_lines = 0                   # Raises level
         self.lines_text = tkinter.StringVar()    # Displayed in lines label
@@ -72,6 +73,7 @@ class Game():
         self.canvas.after_cancel(self.time_step_cycle)
 
     def new_game(self):
+        self.is_game_over = False
         self.unbind_keys()
         self.pause()
 
@@ -88,8 +90,35 @@ class Game():
         self.reset_points()
         self.time_step_cycle = None
         time.sleep(0.6)
+
+        self.program.pause_button.config(state='normal')
         self.bind_keys()
         self.run()
+
+    def game_over(self):
+        self.pause()
+        self.unbind_keys()
+        self.program.pause_button.config(state='disabled')
+        self.is_game_over = True
+
+        self.images = []
+        for i in range(8):
+            filename = 'game_over_images/game_over_' + str(i) +'.png'
+            self.images.append(tkinter.PhotoImage(file=filename))
+        x = self.canvas_width // 2
+        y = self.canvas_height // 2
+        self.game_over_image = self.canvas.create_image(x, y,
+                                                        image=self.images[0])
+        self.canvas.update()
+        self.game_over_change_phase(1)
+
+    def game_over_change_phase(self, i):
+        if self.is_game_over:
+            self.canvas.itemconfig(self.game_over_image, image=self.images[i % 8])
+            self.canvas.after(100, lambda: self.game_over_change_phase(i+1))
+            self.canvas.update()
+        else:
+            self.canvas.delete(self.game_over_image)
 
     def bind_keys(self):
         for key in '<Left>', '<Right>', '<Up>', '<Down>', '<space>':
@@ -114,8 +143,7 @@ class Game():
             self.display_next_shape(self.next_shape_type)
             # New active shape starts to fall
             if not self.active_shape.can_move('<down>', self.shapes_in_canvas):
-                self.pause()
-                print("Game over")
+                self.game_over()
             else:
                 self.active_shape.move('<down>')
                 self.call_next_time_step()
@@ -294,6 +322,8 @@ class Game():
 
     def load(self, filename):
         # Game paused and keys unbinded by program object
+        self.is_game_over = False
+
         for shape in self.shapes_in_canvas:
             shape.delete()
         self.shapes_in_canvas.clear()

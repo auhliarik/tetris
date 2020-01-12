@@ -92,10 +92,11 @@ class Program:
             self.game.run()
             self.game.bind_keys()
             self.pause_button.config(image=self.pause_image)
+        # In case button has been deactivated because the game is over
+        self.pause_button.config(state='normal')
 
     def show_help(self):
         if not self.game.paused:
-            was_paused = False
             self.pause_unpause()
 
         self.popup = tk.Toplevel(self.window)
@@ -115,8 +116,8 @@ class Program:
         def okey():
             self.popup.grab_release()
             self.popup.destroy()
-            if not was_paused:
-                self.pause_unpause()
+            self.window.focus_force()
+            self.pause_unpause()
 
         button = tk.Button(self.popup, text="Okey", font=font, command=okey)
         button.grid(row=1, pady=2)
@@ -133,7 +134,10 @@ class Program:
         Afterwards, it acts according to answer."""
 
         if not self.game.paused:
+            was_paused = False
             self.pause_unpause()
+        else:
+            was_paused = True
 
         self.popup = tk.Toplevel(self.window)
         self.popup.title("Warning")
@@ -146,16 +150,19 @@ class Program:
         label = tk.Label(self.popup, text=text, font=font)
         label.grid(row=0, columnspan=2, padx=20, pady=10)
 
-        def f_no():
+        def f_no(was_paused):
             self.popup.grab_release()
             self.popup.destroy()
-            self.pause_unpause()
+            self.window.focus_force()
+            if not was_paused:
+                self.pause_unpause()
         button_no = tk.Button(self.popup, text="No", font=font,
-                              command=f_no)
+                              command= lambda: f_no(was_paused))
         button_no.grid(row=1, column=0)
         def f_yes():
             self.popup.grab_release()
             self.popup.destroy()
+            self.window.focus_force()
             self.new_game()
         button_yes = tk.Button(self.popup, text="Yes", font=font,
                                command=f_yes)
@@ -193,14 +200,15 @@ class Program:
             self.pause_unpause()
         else:
             was_paused = True
+            
         filetypes = (("tetris files", "*.tet"),)
         filename = tk.filedialog.askopenfilename(initialdir=".",
                                                  title="Select file",
                                                  filetypes=filetypes)
         if filename:
             self.game.load(filename)
-        if not was_paused:
-            self.pause_unpause()
+        self.pause_unpause()
+
 
 
 Program()
