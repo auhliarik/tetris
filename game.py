@@ -149,8 +149,11 @@ class Game():
         if self.active_shape == None:
             # Erasing full lines. Keys are unbinded as it seems that pressing
             # a key while erasing lines can cause problems.
+            # erase_full_lines is called until it returns zero since due to
+            # falling of shapes lines can fill again
             self.unbind_keys()
-            self.erase_full_lines()
+            while self.erase_full_lines():
+                pass
             self.bind_keys()
             # Spawing new active shape
             self.active_shape = shp.Shape(self.next_shape_type)
@@ -215,7 +218,7 @@ class Game():
     def erase_full_lines(self):
         """Manages everything what needs to be done after a shape locks -
         mainly erasing of full lines.
-        """
+        Returns number of deleted lines."""
 
         no_rows = self.no_rows
         no_columns = self.no_columns
@@ -260,7 +263,7 @@ class Game():
 
         # Continues only if some lines have been deleted
         if not no_deleted_lines:
-            return
+            return 0
 
         # Deleting all shapes containing no squares
         for shape in list(self.shapes_in_canvas):
@@ -283,6 +286,7 @@ class Game():
                 times_unchanged += 1
             else:
                 times_unchanged = 0
+        return no_deleted_lines
 
     def add_points(self, no_deleted_lines):
         """Updates number of deleted lines, points, level and increases game
