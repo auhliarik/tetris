@@ -21,9 +21,10 @@ class Game():
         self.deleted_lines = 0                   # Raises level
         self.lines_text = tkinter.StringVar()    # Displayed in lines label
         self.lines_text.set("Deleted lines: 0")
-        self.level = 1      # Increased by points, affects delay
+        # Increased by points, affects delay and number of new points
+        self.level = 1
         self.points = 0
-        self.points_text = tkinter.StringVar()    # Displayed in points label
+        self.points_text = tkinter.StringVar()   # Displayed in points label
         self.points_text.set("Points: 0")
 
         # Canvas, Where next shape to spawn is shown, should be set before run
@@ -71,6 +72,7 @@ class Game():
         self.canvas.after_cancel(self.time_step_cycle)
 
     def new_game(self):
+        self.unbind_keys()
         self.pause()
 
         for shape in self.shapes_in_canvas:
@@ -79,6 +81,7 @@ class Game():
 
         self.active_shape = shp.Shape(random.choice(self.shape_types))
         self.next_shape_type = random.choice(self.shape_types)
+        self.display_next_shape(self.next_shape_type)
         self.canvas.update()
 
         self.shapes_in_canvas = {self.active_shape}
@@ -98,11 +101,15 @@ class Game():
 
     def time_step(self):
         if self.active_shape == None:
+            # Erasing full lines. Keys are unbinded as it seems that pressing
+            # a key while erasing lines can cause problems.
+            self.unbind_keys()
             self.erase_full_lines()
+            self.bind_keys()
             # Spawing new active shape
             self.active_shape = shp.Shape(self.next_shape_type)
             self.shapes_in_canvas.add(self.active_shape)
-            # Choosing and displaying new shape in the queue
+            # Choosing and displaying the next shape in the queue
             self.next_shape_type = random.choice(self.shape_types)
             self.display_next_shape(self.next_shape_type)
             # New active shape starts to fall
@@ -111,15 +118,22 @@ class Game():
                 print("Game over")
             else:
                 self.active_shape.move('<down>')
-                self.time_step_cycle = self.canvas.after(self.delay,
-                                                         self.time_step)
+                self.call_next_time_step()
             return
 
         if self.active_shape.can_move('<down>', self.shapes_in_canvas):
             self.active_shape.move('<down>')
         else:
             self.active_shape = None
+        self.call_next_time_step()
 
+    def call_next_time_step(self):
+        """Private method. Safely calles next time step, i.e. deletes another
+        call if there is such present, in order to prevent double canvas.after
+        cycle, which would increase the game speed."""
+
+        if self.time_step_cycle is not None:
+            self.canvas.after_cancel(self.time_step_cycle)
         self.time_step_cycle = self.canvas.after(self.delay, self.time_step)
 
 
@@ -137,24 +151,25 @@ class Game():
         elif key == 'Down':
             # Forces a shape to fall one block immediately
             # self.time_step timer is cancelled, so that shape does not fall
-            # both due to time flow  and pressing '<Down>' key.
+            # both due to time flow and pressing '<Down>' key.
             # After falling one block the timer restarts.
             self.canvas.after_cancel(self.time_step_cycle)
             self.active_shape.test_and_move('<down>', self.shapes_in_canvas)
-            self.time_step_cycle = self.canvas.after(self.delay, self.time_step)
+            self.call_next_time_step()
         elif key == 'space':
             # Forces shape to immediately land
             self.canvas.after_cancel(self.time_step_cycle)
             while self.active_shape.can_move('<down>', self.shapes_in_canvas):
                 self.active_shape.move('<down>')
             self.active_shape = None
-            self.time_step_cycle = self.canvas.after(self.delay, self.time_step)
+            self.call_next_time_step()
         else:
             print(key)
 
     def erase_full_lines(self):
         """
         """
+
         no_rows = self.no_rows
         no_columns = self.no_columns
 
@@ -196,20 +211,20 @@ class Game():
                             shape.remove_square(square)
                             part_above.add_square(square)
 
+        if not no_deleted_lines:
+            return
+
         # Deleting all shapes containing no squares
         for shape in list(self.shapes_in_canvas):
             if len(shape.coords) == 0:
                 self.shapes_in_canvas.discard(shape)
 
         # Add deleted lines, points, update level, etc.
-        if no_deleted_lines:
-            self.add_points(no_deleted_lines)
+        self.add_points(no_deleted_lines)
 
         # Falling of blocks
         # All shapes try to move down one after another until the situation
         # is not changed after two iterations
-        if no_deleted_lines == 0:
-            return
         times_unchanged = 0
         while times_unchanged < 2:
             has_changed = False
@@ -222,7 +237,7 @@ class Game():
                 times_unchanged = 0
 
     def add_points(self, no_deleted_lines):
-        """Updates no. of deleted lines, points, level and increases game
+        """Updates number of deleted lines, points, level and increases game
         speed if needed."""
 
         self.deleted_lines += no_deleted_lines
@@ -237,14 +252,14 @@ class Game():
             self.delay = round(self.delay * 0.8)
 
     def reset_points(self):
-        """Resets points, no. of deleted lines, level and game speed. Used when
-        game is reset."""
-        
+        """Resets points, number of deleted lines, level and game speed.
+        Used when game is reset."""
+
         self.deleted_lines = 0
         self.lines_text.set(f"Deleted lines: {self.deleted_lines}")
 
         self.points = 0
         self.points_text.set(f"Points: {self.points}")
 
-        self.level = 0
+        self.level = 1
         self.delay = 500
