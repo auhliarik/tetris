@@ -7,10 +7,12 @@ import shape as shp
 
 
 class Game():
+    """Class that controls most of in-game mechanisms."""
+
     def __init__(self, program, window, next_shape_canvas):
         # Do not change these constants. Their changing is not possible without
         # a manual change of other parameters - mainly shapes' spawnig position.
-        self.program = program
+        self.program = program  # Which uses an instance of this class
         self.block_size  = sq.Square.a = 30
         self.no_rows     = sq.Square.num_rows = 20
         self.no_columns  = sq.Square.num_columns = 15
@@ -49,8 +51,10 @@ class Game():
         self.time_step_cycle = None
         self.bind_keys()
 
-
     def display_next_shape(self, type):
+        """Shows next shape in the queue of the type 'type' in the
+        self.next_shape_canvas. Should be used every time type of the next shape
+        is updated."""
         i0 = 2
         j0 = 1
 
@@ -65,6 +69,7 @@ class Game():
                                     canvas=self.next_shape_canvas)
 
     def run(self):
+        """Starts the game for the first time or after it has been paused."""
         self.paused = False
         self.time_step()
 
@@ -73,6 +78,8 @@ class Game():
         self.canvas.after_cancel(self.time_step_cycle)
 
     def new_game(self):
+        """Resets the game."""
+
         self.is_game_over = False
         self.unbind_keys()
         self.pause()
@@ -82,15 +89,16 @@ class Game():
         self.shapes_in_canvas.clear()
 
         self.active_shape = shp.Shape(random.choice(self.shape_types))
+        self.shapes_in_canvas = {self.active_shape}
         self.next_shape_type = random.choice(self.shape_types)
         self.display_next_shape(self.next_shape_type)
         self.canvas.update()
 
-        self.shapes_in_canvas = {self.active_shape}
         self.reset_points()
         self.time_step_cycle = None
         time.sleep(0.6)
 
+        # In case game was previously over
         self.program.pause_button.config(state='normal')
         self.bind_keys()
         self.run()
@@ -101,34 +109,43 @@ class Game():
         self.program.pause_button.config(state='disabled')
         self.is_game_over = True
 
-        self.images = []
+        # Loading individual phases of game over animation
+        self.game_over_phases = []
         for i in range(8):
             filename = 'game_over_images/game_over_' + str(i) +'.png'
-            self.images.append(tkinter.PhotoImage(file=filename))
+            self.game_over_phases.append(tkinter.PhotoImage(file=filename))
         x = self.canvas_width // 2
         y = self.canvas_height // 2
         self.game_over_image = self.canvas.create_image(x, y,
-                                                        image=self.images[0])
+                                                image=self.game_over_phases[0])
         self.canvas.update()
-        self.game_over_change_phase(1)
+        self.game_over_set_phase(1)
 
-    def game_over_change_phase(self, i):
+    def game_over_set_phase(self, i):
+        """Changes phase in game-over animation.
+        Lasts until self.is_game_over turns False"""
         if self.is_game_over:
-            self.canvas.itemconfig(self.game_over_image, image=self.images[i % 8])
-            self.canvas.after(100, lambda: self.game_over_change_phase(i+1))
+            self.canvas.itemconfig(self.game_over_image,
+                                   image=self.game_over_phases[i % 8])
+            self.canvas.after(100, lambda: self.game_over_set_phase(i+1))
             self.canvas.update()
         else:
             self.canvas.delete(self.game_over_image)
 
     def bind_keys(self):
+        """Binds all keys, by which the game is controlled."""
         for key in '<Left>', '<Right>', '<Up>', '<Down>', '<space>':
             self.canvas.bind_all(key, self.key_pressed)
 
     def unbind_keys(self):
+        """Unbinds all keys, by which the game is controlled."""
         for key in '<Left>', '<Right>', '<Up>', '<Down>', '<space>':
             self.canvas.unbind_all(key)
 
     def time_step(self):
+        """Performs a time step.
+        Treats all cases, which can occur."""
+
         if self.active_shape == None:
             # Erasing full lines. Keys are unbinded as it seems that pressing
             # a key while erasing lines can cause problems.
@@ -156,15 +173,17 @@ class Game():
         self.call_next_time_step()
 
     def call_next_time_step(self):
-        """Private method. Safely calles next time step, i.e. deletes another
-        call if there is such present, in order to prevent double canvas.after
-        cycle, which would increase the game speed."""
+        """Private method.
+        Safely calles next time step, i.e. deletes another call if there is such
+        present, in order to prevent double canvas.after cycle, which would
+        increase the game speed."""
 
         if self.time_step_cycle is not None:
             self.canvas.after_cancel(self.time_step_cycle)
         self.time_step_cycle = self.canvas.after(self.delay, self.time_step)
 
     def key_pressed(self, event):
+        """Reacts to pressed key of any relevant kind."""
         key = event.keysym
         if self.active_shape == None:
             pass
@@ -194,7 +213,8 @@ class Game():
             print(key)
 
     def erase_full_lines(self):
-        """
+        """Manages everything what needs to be done after a shape locks -
+        mainly erasing of full lines.
         """
 
         no_rows = self.no_rows
@@ -238,6 +258,7 @@ class Game():
                             shape.remove_square(square)
                             part_above.add_square(square)
 
+        # Continues only if some lines have been deleted
         if not no_deleted_lines:
             return
 
@@ -251,7 +272,7 @@ class Game():
 
         # Falling of blocks
         # All shapes try to move down one after another until the situation
-        # is not changed after two iterations
+        # is not changed by two consecutive iterations
         times_unchanged = 0
         while times_unchanged < 2:
             has_changed = False

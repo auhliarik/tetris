@@ -31,8 +31,8 @@ class Square:
 
     def move_to(self, row, column):
         """Safely moves square to another position determined by [row]
-        and [column] - checks whether these are valid. Mainly used by
-        row and column setters."""
+        and [column] - checks whether these are valid.
+        Mainly used by row and column setters."""
 
         Square.test_row_and_column(row, column)
         self._row = row
@@ -51,6 +51,7 @@ class Square:
         self.canvas.delete(self._tag)
 
     def __str__(self):
+        """Returns (row, column) of the square."""
         return "(" + str(self._row) + "," + str(self._column) + ")"
 
     __repr__ = __str__

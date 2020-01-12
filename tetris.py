@@ -1,3 +1,5 @@
+__author__ = 'Andrej Uhliarik'
+
 import tkinter as tk
 import tkinter.filedialog
 
@@ -7,12 +9,11 @@ import game
 
 class Program:
     def __init__(self):
-
+        # Main window
         self.window = tk.Tk()
         self.window.title("Tetris")
 
-
-        #
+        # Toolbar on the right side of the main canvas
         self.toolbar = tk.Frame(self.window,
                                 height=600,
                                 width=500)
@@ -48,7 +49,6 @@ class Program:
                                      text="Help", font=font,
                                      command=self.show_help)
         self.help_button.grid(row=4, pady=5)
-
 
         # 'New game' button
         font = tkfont.Font(family='Helvetica', size=18, weight='bold')
@@ -92,10 +92,12 @@ class Program:
             self.game.run()
             self.game.bind_keys()
             self.pause_button.config(image=self.pause_image)
-        # In case button has been deactivated because the game is over
+        # In case button has been previously deactivated because game was over
         self.pause_button.config(state='normal')
 
     def show_help(self):
+        """Shows pop-up window with controls.
+        The game is paused until it is closed."""
         if not self.game.paused:
             self.pause_unpause()
 
@@ -200,7 +202,7 @@ class Program:
             self.pause_unpause()
         else:
             was_paused = True
-            
+
         filetypes = (("tetris files", "*.tet"),)
         filename = tk.filedialog.askopenfilename(initialdir=".",
                                                  title="Select file",
@@ -208,7 +210,6 @@ class Program:
         if filename:
             self.game.load(filename)
         self.pause_unpause()
-
 
 
 Program()

@@ -6,9 +6,9 @@ class UnknownMovementDirectionErrror(Exception): pass
 
 
 class Shape():
-    """Class used to handle individual shapes in a game. See its methods for
-    more information."""
-    primary_canvas = None
+    """Class used to handle individual shapes in a game.
+    See its methods for more information."""
+    primary_canvas = None   # Where everything important takes place
 
     def __init__(self, type, i0=-1 , j0=6, canvas=None, empty=False):
         self._type = type    # One of 'I', 'J', 'L', 'S', 'Z', 'O', 'T'
@@ -19,7 +19,7 @@ class Shape():
 
         # Individual shape types with important information about them
         # 'squares_coords' are spawning coordinates of shapes, dependent of
-        # (i0, j0) - left lower corner of an 2x4 box, where they spawn.
+        # (i0, j0) - lower left corner of an 2x4 box, where they spawn.
         if self._type == 'I':
             squares_coords = [(i0,j0), (i0,j0+1), (i0,j0+2), (i0,j0+3)]
             rotation_center = [i0, j0+2]
@@ -60,8 +60,8 @@ class Shape():
                 self._squares.add(sq.Square(self._canvas, i, j, self._color))
 
     def is_at(self, row, column):
-        """Returns boolean, whether one of the shape's squares is at postition
-        ([row], [column]) or not."""
+        """Returns True/False, whether one of the shape's squares is at
+        postition ([row], [column]) or not."""
 
         for square in self._squares:
             if square.coords == (row, column):
@@ -95,7 +95,9 @@ class Shape():
     def move(self, where):
         """Moves a shape one block without checking if it is possible, i.e.
         without a check whether there is something in the direction of the move
-        or whether new row and column numbers are valid."""
+        or whether new row and column numbers are valid.
+        Do NOT use this method alone without can_move, unless you are
+        completely sure it will not cause problems."""
 
         if where == '<down>':
             row_diff = 1
@@ -122,8 +124,8 @@ class Shape():
 
     def test_and_move(self, where, all_shapes):
         """Combines 'can_move' and 'move' methods - firstly checks if the move
-        is possible and if yes the move is performed."""
-
+        is possible and if it is, the move is performed.
+        Returns True/False whether the move was successful."""
 
         if self.can_move(where, all_shapes):
             self.move(where)
@@ -132,8 +134,10 @@ class Shape():
             return False
 
     def test_and_rotate(self, all_shapes):
-        """Tests, whether rotating a shape is possible and rotates it, if it is.
-        Returns 'True', when rotation was successful and 'False' otherwise."""
+        """Tests, whether rotating a shape is possible and rotates the shape,
+        if it is.
+        Returns True/False whether the rotation was successful."""
+
         rc = self._rotation_center
 
         # New positions, which shape should occupy after rotation
@@ -148,7 +152,7 @@ class Shape():
                 new_positions.append((i-1,j))
                 new_positions.append((i,j))
                 new_positions.append((i+1,j))
-            else:
+            else:                   # Shape in vertical position
                 new_positions.append((i,j-2))
                 new_positions.append((i,j-1))
                 new_positions.append((i,j))
@@ -192,6 +196,10 @@ class Shape():
         return True
 
     def can_move_to(self, new_positions, all_shapes):
+        """Auxiliary method that checks if moving of the shape's squares to
+        new_positions is possible, i.e. whether new row and column numbers are
+        valid and there is no other shape."""
+
         if len(all_shapes) > 0:
             for row, column in new_positions:
                 for shape in all_shapes - {self}:
@@ -207,10 +215,13 @@ class Shape():
         self._squares.add(square)
 
     def remove_square(self, square):
+        """Removes square from the set of shape's squares.
+        However, the square is not deleted."""
         self._squares.discard(square)
 
     def delete_square_at(self, row, column):
-        """Deletes square of a shape which is at position ([row], [column])."""
+        """Deletes square of a shape which is at position ([row], [column]).
+        and removes it from the set of shape's squares."""
 
         for square in self._squares:
             if square.coords == (row, column):
@@ -219,6 +230,7 @@ class Shape():
                 break
 
     def delete(self):
+        """Deletes all shape's squares."""
         for square in self._squares:
             square.delete()
 
@@ -244,7 +256,8 @@ class Shape():
 
     @rotation_center.setter
     def rotation_center(self, rotation_center):
-        """Use with caution!"""
+        """Use with caution!
+        Can cause problems with shape rotation."""
         self._rotation_center = list(rotation_center)
 
     @property
