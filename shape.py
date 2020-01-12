@@ -53,10 +53,11 @@ class Shape():
             raise UnknownShapeTypeError(message)
 
         self._rotation_center = rotation_center # Needed only until shape locks
+        self._color = color
         self._squares = set()
         if not empty:
             for i, j in squares_coords:
-                self._squares.add(sq.Square(self._canvas, i, j, color))
+                self._squares.add(sq.Square(self._canvas, i, j, self._color))
 
     def is_at(self, row, column):
         """Returns boolean, whether one of the shape's squares is at postition
@@ -232,6 +233,19 @@ class Shape():
     @property
     def type(self):
         return self._type
+
+    @property
+    def color(self):
+        return self._color
+
+    @property
+    def rotation_center(self):
+        return self._rotation_center
+
+    @rotation_center.setter
+    def rotation_center(self, rotation_center):
+        """Use with caution!"""
+        self._rotation_center = list(rotation_center)
 
     @property
     def squares(self):

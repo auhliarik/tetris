@@ -136,7 +136,6 @@ class Game():
             self.canvas.after_cancel(self.time_step_cycle)
         self.time_step_cycle = self.canvas.after(self.delay, self.time_step)
 
-
     def key_pressed(self, event):
         key = event.keysym
         if self.active_shape == None:
@@ -263,3 +262,99 @@ class Game():
 
         self.level = 1
         self.delay = 500
+
+    def save(self, filename):
+        with open(filename, 'w') as file:
+            # Writing game stats
+            file.write(str(self.points) + '\n')
+            file.write(str(self.deleted_lines) + '\n')
+            file.write(str(self.level) + '\n')
+            file.write(str(self.delay) + '\n\n')
+
+            # Writing next shape type
+            file.write(self.next_shape_type + '\n\n')
+
+            # Writing active shape info
+            if self.active_shape is not None:
+                file.write(self.active_shape.type + '\n')
+                row, column = self.active_shape.rotation_center
+                file.write(str(row) + ' ' + str(column) + '\n')
+                for square in self.active_shape.squares:
+                    file.write(str(square.row) + ' ' + str(square.column) +'\n')
+            else:
+                file.write("None" + '\n')
+            file.write('\n\n')
+
+            # Writing other shapes info
+            for shape in self.shapes_in_canvas - {self.active_shape}:
+                file.write(shape.type + '\n')
+                for square in shape.squares:
+                    file.write(str(square.row) + ' ' + str(square.column) +'\n')
+                file.write('\n')
+
+    def load(self, filename):
+        # Game paused and keys unbinded by program object
+        for shape in self.shapes_in_canvas:
+            shape.delete()
+        self.shapes_in_canvas.clear()
+
+        with open(filename) as file:
+            # Loading game stats
+            self.points = int(file.readline())
+            self.points_text.set(f"Points: {self.points}")
+
+            self.deleted_lines = int(file.readline())
+            self.lines_text.set(f"Deleted lines: {self.deleted_lines}")
+
+            self.level = int(file.readline())
+            self.delay = int(file.readline())
+
+            # Loading next shape type
+            file.readline()
+            self.next_shape_type = file.readline().strip()
+            self.display_next_shape(self.next_shape_type)
+            file.readline()
+
+            # Loading active shape
+            type = file.readline().strip()
+            self.active_shape = shp.Shape(type, empty=True)
+            color = self.active_shape.color
+
+            row, column = file.readline().split()
+            row = int(row)
+            column = int(column)
+            self.active_shape.rotation_center = [row, column]
+
+            line = file.readline().strip()
+            while line:
+                row, column = line.split()
+                row = int(row)
+                column = int(column)
+                self.active_shape.add_square(sq.Square(self.canvas,
+                                                       row, column,
+                                                       color))
+                line = file.readline().strip()
+            self.shapes_in_canvas = {self.active_shape}
+            file.readline()
+
+            # Loading other shapes
+            while True:
+                type = file.readline().strip()
+                if not type:    # End of .tet file
+                    break
+                shape = shp.Shape(type, empty=True)
+                color = shape.color
+                self.shapes_in_canvas.add(shape)
+                line = file.readline().strip()
+                while line:
+                    row, column = line.split()
+                    row = int(row)
+                    column = int(column)
+                    shape.add_square(sq.Square(self.canvas,
+                                               row, column,
+                                               color))
+                    line = file.readline().strip()
+
+        self.canvas.update()
+        self.time_step_cycle = None
+        time.sleep(0.6)
